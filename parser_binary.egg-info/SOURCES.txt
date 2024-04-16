@@ -1,0 +1,13 @@
+setup.py
+hplc/__init__.py
+hplc/read_files.py
+parser_binary.egg-info/PKG-INFO
+parser_binary.egg-info/SOURCES.txt
+parser_binary.egg-info/dependency_links.txt
+parser_binary.egg-info/not-zip-safe
+parser_binary.egg-info/requires.txt
+parser_binary.egg-info/top_level.txt
+src/parser_hplc.cpp
+src/parser_xray.cpp
+xray/__init__.py
+xray/bruker_xray.py
