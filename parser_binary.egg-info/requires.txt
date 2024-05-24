@@ -1,7 +1,7 @@
-numpy
 pandas
-plotly
+numpy
 typeguard
+plotly
 
 [test]
 pytest

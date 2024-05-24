@@ -238,7 +238,7 @@ struct UVClass {
                 } else {
                     buffer7 += buffer6;
                 }
-                ndata[i][j] = buffer7 / 2000.0; // correct?
+                ndata[i][j] = buffer7;  // / 2000.0; // correct?
             }
         }
         file.close();

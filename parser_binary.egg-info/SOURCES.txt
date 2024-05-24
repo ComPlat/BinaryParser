@@ -9,5 +9,6 @@ parser_binary.egg-info/requires.txt
 parser_binary.egg-info/top_level.txt
 src/parser_hplc.cpp
 src/parser_xray.cpp
+tests/test.py
 xray/__init__.py
 xray/bruker_xray.py
