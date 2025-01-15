@@ -31,10 +31,5 @@ setup(
     zip_safe=False,
     python_requires=">=3.7",
     packages=find_packages(),
-     install_requires=[
-        "pandas",
-        "numpy",
-        "typeguard",
-        "plotly"
-    ],
+    install_requires=["pybind11", "pandas", "numpy", "typeguard", "plotly"],
 )
