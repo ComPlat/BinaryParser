@@ -34,5 +34,5 @@ jobs:
         run: python setup.py build_ext --inplace
 
       - name: Test package
-        run: pytest
+        run: python ./tests/test.py #pytest
 
