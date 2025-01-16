@@ -4,7 +4,7 @@ import BinaryParser as bp
 def test_read_chromatograms():
     path = "./tests/X3346.D"
     df = bp.read_chromatograms(path)
-
+    print(df.columns)
     assert df.columns.tolist() == [
         "Wavelength_280",
         "Wavelength_230",
