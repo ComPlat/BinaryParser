@@ -33,3 +33,6 @@ df = bp.read_chromatograms(path)
 bp.plot_chromatograms(path)
 
 ### License
+
+The project is licensed under the GNU General Public License v3.0.
+See the LICENSE file for more information.
