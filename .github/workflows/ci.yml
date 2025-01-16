@@ -42,6 +42,13 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install pybind11
 
+      # Lint the code
+      - name: Lint Code
+        uses: wearerequired/lint-action@v2.3.0
+        with:
+          linters: |
+            pylint
+
       # Step 5: Build the wheel
       - name: Build Wheel
         run: python setup.py bdist_wheel
