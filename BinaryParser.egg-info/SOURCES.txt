@@ -1,0 +1,17 @@
+__init__.py
+pyproject.toml
+setup.py
+./__init__.py
+./setup.py
+BinaryParser.egg-info/PKG-INFO
+BinaryParser.egg-info/SOURCES.txt
+BinaryParser.egg-info/dependency_links.txt
+BinaryParser.egg-info/not-zip-safe
+BinaryParser.egg-info/requires.txt
+BinaryParser.egg-info/top_level.txt
+hplc/__init__.py
+hplc/read_files.py
+src/parser_hplc.cpp
+src/parser_xray.cpp
+xray/__init__.py
+xray/bruker_xray.py

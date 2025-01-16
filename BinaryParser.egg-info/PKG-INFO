@@ -1,0 +1,20 @@
+Metadata-Version: 2.2
+Name: BinaryParser
+Version: 0.0.1
+Summary: Parsing binary files
+Author: Konrad Krämer
+Author-email: konrad.kraemer@kit.edu
+Requires-Python: >=3.7
+Requires-Dist: pybind11
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: typeguard
+Requires-Dist: plotly
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Dynamic: author
+Dynamic: author-email
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

@@ -1,0 +1,8 @@
+pybind11
+pandas
+numpy
+typeguard
+plotly
+
+[test]
+pytest
