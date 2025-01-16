@@ -2,14 +2,30 @@ import parser_xray as px
 import pandas as pd
 from typeguard import typechecked
 from typing import List
- 
-search_for = {'GONIOMETER_RADIUS': 217.5, 'FIXED_DIVSLIT': 0.6, 'SAMPLESLIT': 0.0,
-              'DETSLIT': 10.39, 'ANTISLIT': 6.17, 'START': 20.0,
-              'THETA': 10.0, 'THETA2': 20.0, 'TIMESTARTED': 14, 'TEMP_RATE': -1,
-              'TEMP_DELAY': -1, 'KV': 35, 'MA': 45, "WL1": 1.540600, "WL2": 1.544390, "WL3": 1.392220}
 
-res = px.readDoubles("/home/konrad/Documents/GitHub/chromatogramsR/Bruker/PD.raw", 0)
-df = pd.DataFrame(res);
+search_for = {
+    "GONIOMETER_RADIUS": 217.5,
+    "FIXED_DIVSLIT": 0.6,
+    "SAMPLESLIT": 0.0,
+    "DETSLIT": 10.39,
+    "ANTISLIT": 6.17,
+    "START": 20.0,
+    "THETA": 10.0,
+    "THETA2": 20.0,
+    "TIMESTARTED": 14,
+    "TEMP_RATE": -1,
+    "TEMP_DELAY": -1,
+    "KV": 35,
+    "MA": 45,
+    "WL1": 1.540600,
+    "WL2": 1.544390,
+    "WL3": 1.392220,
+}
+
+res = px.readDoubles(
+    "/home/konrad/Documents/GitHub/RProjects/chromatogramsR/Bruker/PD.raw", 0
+)
+df = pd.DataFrame(res)
 df.columns = ["data"]
 
 for key, value in search_for.items():
@@ -21,8 +37,10 @@ print()
 print()
 print()
 
-res = px.readFloates("/home/konrad/Documents/GitHub/chromatogramsR/Bruker/PD.raw", 0)
-df = pd.DataFrame(res);
+res = px.readFloates(
+    "/home/konrad/Documents/GitHub/RProjects/chromatogramsR/Bruker/PD.raw", 0
+)
+df = pd.DataFrame(res)
 df.columns = ["data"]
 
 for key, value in search_for.items():
@@ -38,15 +56,14 @@ print()
 print()
 
 
-
-path = "/home/konrad/Documents/GitHub/chromatogramsR/Bruker/WeitereDaten/XRD/7_80_3_001651_Cu_SSZ13_05_7.raw"
-#_WL1=1.540600
-#_WL2=1.544390
-#_WL3=0.00000    
-#_WLRATIO=0.500000
-#_START=7.000000
-#_THETA=3.500000
-#_2THETA=7.000000
+path = "/home/konrad/Documents/GitHub/RProjects/chromatogramsR/Bruker/WeitereDaten/XRD/7_80_3_001651_Cu_SSZ13_05_7.raw"
+# _WL1=1.540600
+# _WL2=1.544390
+# _WL3=0.00000
+# _WLRATIO=0.500000
+# _START=7.000000
+# _THETA=3.500000
+# _2THETA=7.000000
 
 # xxd
 # 000003c8: 0000 5c00 0000 0200  ..\..... --> 968
@@ -63,9 +80,8 @@ path = "/home/konrad/Documents/GitHub/chromatogramsR/Bruker/WeitereDaten/XRD/7_8
 # 00000420: 0000 3200 0000 5c00  ..2...\.
 
 
-
 res = px.readDoubles(path, 0)
-df = pd.DataFrame(res);
+df = pd.DataFrame(res)
 df.columns = ["data"]
 print(df.iloc[100:130])
 df = df[(df.round() != 0.0) & (df < 1000.0) & (df > 0.0)].dropna()
@@ -74,7 +90,7 @@ df = df.iloc[0:60]
 
 res = px.readFloates(path, 0)
 
-df = pd.DataFrame(res);
+df = pd.DataFrame(res)
 print(df.iloc[240:250])
 df.columns = ["data"]
 df = df[(df.round() != 0.0) & (df < 1000.0) & (df > 0.0)].dropna()

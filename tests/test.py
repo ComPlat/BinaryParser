@@ -1,6 +1,16 @@
-import parser_binary.hplc as ph
-import hplc as ph
+import BinaryParser as bp
 
-path = "/home/konrad/Documents/GitHub/RProjects/chromatogramsR/X-Vials/X3346.D"
-df = ph.read_chromatograms(path)
-print(df)
+path = "./tests/X3346.D"
+df = bp.read_chromatograms(path)
+
+assert df.columns.tolist() == [
+    "Wavelength_280",
+    "Wavelength_230",
+    "Wavelength_300",
+    "Wavelength_400",
+    "Wavelength_254",
+    "time",
+]
+assert df.size == 20706
+assert df.shape == (3451, 6)
+print("All tests passed!")

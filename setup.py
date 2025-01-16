@@ -19,7 +19,7 @@ ext_modules = [
 ]
 
 setup(
-    name="parser_binary",
+    name="BinaryParser",
     version=__version__,
     author="Konrad Krämer",
     author_email="konrad.kraemer@kit.edu",
@@ -30,6 +30,9 @@ setup(
     cmdclass={"build_ext": build_ext},
     zip_safe=False,
     python_requires=">=3.7",
-    packages=find_packages(),
+    # packages=find_packages(),
+    packages=(["BinaryParser"] + find_packages()),
+    package_dir={"BinaryParser": "."},
+    setup_requires=["pybind11"],
     install_requires=["pybind11", "pandas", "numpy", "typeguard", "plotly"],
 )

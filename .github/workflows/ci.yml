@@ -1,5 +1,4 @@
 name: CI
-
 on:
   push:
     branches:
@@ -10,29 +9,37 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    name: Build Wheels
+    runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-      - name: Checkout code
+      # Checkout the repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      # Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install build tools
+      # Install dependencies
+      - name: Install Build Tools
         run: |
-          python -m pip install --upgrade pip setuptools wheel pytest
-          python -m pip install pybind11 pandas numpy typeguard plotly
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install pybind11
 
-      - name: Build extensions
-        run: python setup.py build_ext --inplace
+      # Build the wheel
+      - name: Build Wheel
+        run: python setup.py bdist_wheel
 
-      - name: Test package
-        run: python ./tests/test.py #pytest
-
+      # Test the package (optional)
+      - name: Run Tests
+        run: |
+          python -m pip install dist/*.whl
+          python -m pytest tests
