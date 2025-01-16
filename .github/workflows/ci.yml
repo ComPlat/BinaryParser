@@ -63,7 +63,6 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           python ./tests/test.py
-          # python -m unittest discover -s tests
 
       # Optional Step: Debugging (if tests fail)
       - name: Show Python Environment (Debug)
