@@ -62,7 +62,8 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          python ./tests/test.py
+          pip install pytest
+          pytest tests/
 
       # Optional Step: Debugging (if tests fail)
       - name: Show Python Environment (Debug)
