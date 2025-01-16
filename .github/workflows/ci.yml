@@ -38,6 +38,19 @@ jobs:
       - name: Build Wheel
         run: python setup.py bdist_wheel
 
+      # Upload built wheels as artifacts
+      - name: Upload Built Wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaryparser-wheels
+          path: dist/*.whl
+
+      # Install the built wheel
+      - name: Install Built Package
+        run: |
+          pip install dist/*.whl
+
+
       # Test the package (optional)
       - name: Run Tests
         run: |
