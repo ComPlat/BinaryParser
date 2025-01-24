@@ -63,7 +63,7 @@ jobs:
       # Step 7: Release
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v0.0.1
         with:
           tag_name: v0.0.1
           release_name: "Release v0.0.1"
@@ -74,7 +74,7 @@ jobs:
 
       # Step 8: Upload artifact to the release
       - name: Upload to Release
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v0.0.1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dist/BinaryParser-0.0.1-cp312-cp312-linux_x86_64.whl
