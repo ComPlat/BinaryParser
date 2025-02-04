@@ -158,6 +158,9 @@ baseline_correction <- function(df) {
   return(df)
 }
 
+# TODO: Add this for uv analysis.
+# As it is at least an option stated in the software
+# See Spectra Options
 sgolay_smoothing <- function(df, poly_order = 3, window_size = 11) {
   df$intensities <- signal::sgolayfilt(
     df$intensities,
@@ -190,7 +193,7 @@ gaussian_smoothing <- function(df, window_size = 1, sigma = 1) {
   df
 }
 
-file_path <- "./SVS-1025F1.D/MSD1.MS"
+file_path <- "./Chemstation/ChemStationData/LCMS_DatenAgilent_SVS/SVS_1025F1.D/MSD1.MS"
 min_mz <- 100
 max_mz <- 1500
 data <- read(file_path)
@@ -198,5 +201,46 @@ env <- new.env()
 env$data <- data
 split_data(data, env, min_mz, max_mz)
 df <- merge_data(env)
-df <- gaussian_smoothing(df)
+# df <- gaussian_smoothing(df)
 mz_plot(df, 264)
+# INFO:
+# The average spectra looks pretty similar
+# but is not completely identical to the one
+# NOTE: Average spectra is between 6.301-6.723
+mz_plot(df, 263)
+
+
+
+file_path_exported_tic <- "./Chemstation/ExportedSpectra.txt"
+lines <- readLines(file_path_exported_tic)
+vec <- lapply(lines, function(x) {
+  res <- strsplit(x, ",")[[1]]
+  res <- gsub(" ", "", res)
+  res
+}) |> do.call(what = c)
+names(vec) <- NULL
+num_vec <- sapply(seq_len(length(vec)), function(i) {
+  res <- as.numeric(vec[i])
+  if (is.na(res)) {
+    print(i)
+  }
+  res
+})
+tic_dev <- data.frame(
+  time = num_vec[seq(1, length(num_vec), 2)],
+  tic = num_vec[seq(2, length(num_vec), 2)]
+)
+plot(tic_dev$time, tic_dev$tic, type = "l")
+dim(tic_dev)
+
+
+tic <- sapply(seq_along(unique(df$idx)), function(i) {
+  sum(
+    df[df$idx == i, "intensities"]
+  )
+})
+tic
+length(tic)
+head(tic)
+head(tic_dev$tic)
+plot(tic[1:202], tic_dev$tic[1:202])

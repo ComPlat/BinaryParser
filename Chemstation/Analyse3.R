@@ -28,7 +28,8 @@ read <- function(file_path, type = "uint16", endian = "big", signed = FALSE) {
   close(con)
   return(data)
 }
-file_path <- "./SVS-1025F1.D/MSD1.MS"
+
+file_path <- "./Chemstation/ChemStationData/LCMS_DatenAgilent_SVS/SVS_1025F1.D/MSD1.MS"
 d_raw <- read(file_path, type = "raw")
 d_raw <- split(d_raw, rep(1:(length(d_raw) / 2), each = 2))
 odd <- d_raw[
@@ -52,7 +53,7 @@ convert <- function(x) {
 df <- lapply(seq_len(length(even)), function(x) {
   mz <- convert(odd[[x]])
   i <- convert(even[[x]])
-  data.frame(mz = mz, i = i)
+  data.frame(mz = mz, i = i * 20)
 }) |> do.call(what = rbind)
 
 # INFO:Hypothesis
@@ -111,8 +112,11 @@ sub_cycle[[3]] <- sub[1055:1568, ]
 
 p_mz <- function(df) {
   plot(df$mz, df$i, type = "l")
-  indices <- which(df$i > 40)
+  # indices <- which(df$i > 40)
+  indices <- order(df$i, decreasing = TRUE)[1:5]
   text(df[indices, "mz"], df[indices, "i"], df[indices, "mz"])
+  print(min(df$mz))
+  print(df[indices, ])
 }
 p_mz(sub_cycle[[1]])
 p_mz(sub_cycle[[2]])
@@ -168,7 +172,7 @@ ca <- function(a, b) {
   if ((a < 0) || (b < 0)) {
     return(FALSE)
   }
-  (1 - a / b) < 0.1
+  (1 - a / b) < 0.2
 }
 
 find_start_point <- function(env, start, max_mz) {
@@ -239,14 +243,18 @@ length(df$i)
 tic <- sapply(cycles, function(x) {
   sum(x$i)
 })
-plot(tic)
-which.max(tic)
-p_mz(cycles[[262]])
-p_mz(cycles[[264]])
-p_mz(cycles[[265]])
-p_mz(cycles[[266]])
-p_mz(cycles[[267]])
+plot(tic, type = "l")
 
+p_mz1 <- function(df) {
+  df$i <- normalise(df$i)
+  plot(df$mz, df$i, type = "l")
+  indices <- which(df$i > 40)
+  text(df[indices, "mz"], df[indices, "i"], df[indices, "mz"])
+  print(df[indices, ])
+}
+
+idx <- which.max(tic)
+p_mz1(cycles[[idx]])
 
 # NOTE: Hypthesis
 # As the relative peak height is not correct
@@ -255,3 +263,10 @@ p_mz(cycles[[267]])
 # Test whether the peak height of another sim ion
 # is also much larger in the mz spectra
 # as expected by the cycle data
+
+# Extract SIM data
+umps <- do.call(c, env$areas)
+jumps <- jumps[-c(1, length(jumps))]
+jumps <- split(jumps, rep(1:(length(jumps) / 2), each = 2))
+sim <- lapply(jumps, function(x) df[x[1]:x[2], ])
+head(sim, 20)
