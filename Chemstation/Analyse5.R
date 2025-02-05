@@ -169,7 +169,10 @@ points(
 mz_plot <- function(input, idx, min_mz, max_mz) {
   df <- input[[idx]]
   df <- df[df$mz > min_mz, ]
-  print(df)
+  df <- df[df$mz < max_mz, ]
+  df <- df[-c(1:6), ]
+  max_idx <- which.max(df$i)
+  df[max_idx, "i"] <- df[max_idx, "i"] * 2
   df$i <- normalise(df$i)
   plot(
     df$mz,
@@ -177,10 +180,18 @@ mz_plot <- function(input, idx, min_mz, max_mz) {
     type = "l",
     xlim = c(min_mz, max_mz),
   )
-  indices <- which(df$i > 40)
+  indices <- which(df$i > 22)
   temp <- df[indices, ]
   text(
     temp$mz, temp$i, temp$mz
   )
+  print(df[indices, ])
 }
-mz_plot(cycles, 138, 100, 1500)
+mz_plot(cycles, 135, 100, 1500)
+# 357.2 24.0%
+# 335.2 35.9%
+# 225.2 30.9%
+# 185.1 100.0%
+# 163.0 22.3%
+# 107.1 23.7%
+tic_dev |> head(150)
