@@ -11,7 +11,8 @@ read_text <- function(file_path) {
 
 info_path <- "./Chemstation/ChemStationData/LCMS_DatenAgilent_SVS/SVS_1025F1.D/MSACQINF.REG"
 read_text(info_path)
-read_text("./SVS-1025F1.D/MSDIAG.REG")
+info_path <- "./Chemstation/ChemStationData/LCMS_DatenAgilent_SVS/SVS_1025F1.D/MSDIAG.REG"
+read_text(info_path)
 
 file_path <- "./SVS-1025F1.D/MSD1.MS"
 file_size <- file.info(file_path)$size

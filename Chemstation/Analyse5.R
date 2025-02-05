@@ -22,20 +22,11 @@ tic_dev <- data.frame(
 
 # Read tic
 # ======================================================
-read <- function(file_path, type = "uint16", endian = "big", signed = FALSE) {
-  type_size <- NULL
-  if (type == "uint16") {
-    type_size <- 2
-    type <- "integer"
-  } else if (type == "int") {
-    type_size <- 4
-  } else if (type == "double") {
-    type_size <- 4 # ???
-  } else if (type == "raw") {
-    type_size <- 1
-  } else {
-    stop("Invalid type")
-  }
+read <- function(file_path) {
+  type_size <- 2
+  type <- "integer"
+  endian <- "big"
+  signed <- FALSE
   con <- file(file_path, "rb")
   file_size <- file.info(file_path)$size
   data_start <- 752 # Assuming data starts at 0x02f0 (752 in decimal)
@@ -54,32 +45,11 @@ read <- function(file_path, type = "uint16", endian = "big", signed = FALSE) {
 }
 
 file_path <- "./Chemstation/ChemStationData/LCMS_DatenAgilent_SVS/SVS_1025F1.D/MSD1.MS"
-d_raw <- read(file_path, type = "raw")
-d_raw <- split(d_raw, rep(1:(length(d_raw) / 2), each = 2))
-odd <- d_raw[
-  seq_along(d_raw) %% 2 != 0
-]
-even <- d_raw[
-  seq_along(d_raw) %% 2 == 0
-]
 
-normalise <- function(intensities) {
-  max_intensity <- max(intensities)
-  (intensities / max_intensity) * 100
-}
-
-convert <- function(x) {
-  hex_val <- paste0(format(x[1], width = 2), format(x[2], width = 2))
-  int_val <- as.integer(paste0("0x", hex_val))
-  int_val / 20
-}
-
-df <- lapply(seq_len(length(even)), function(x) {
-  mz <- convert(odd[[x]])
-  i <- convert(even[[x]])
-  data.frame(mz = mz, i = i * 20)
-}) |> do.call(what = rbind)
-
+d_uint16 <- read(file_path)
+mz <- d_uint16[seq(1, length(d_uint16), 2)] / 20
+i <- d_uint16[seq(2, length(d_uint16), 2)]
+df <- data.frame(mz = mz, i = i)
 # INFO: 0.25 is the end of a cycle!
 
 # split in cycles
@@ -101,6 +71,7 @@ find_start_point <- function(env, start, max_mz) {
       return(i)
     }
   }
+  return(NULL)
 }
 
 find_end_point <- function(env, start, min_mz) {
@@ -120,18 +91,44 @@ detect_areas <- function(env, min_mz, max_mz) {
     if (is.null(end)) {
       break
     }
-    if ((end - start) > 3) {
+    if ((end - start) > 3) { # TODO: 3 is somehow arbitrary
       env$areas <- append(env$areas, list(c(start, end)))
     }
     start <- end + 1
   }
 }
+
+correct_cycles <- function(cycles, min_mz, max_mz) {
+  lapply(cycles, function(x) {
+    x <- x[x$mz >= min_mz & x$mz <= max_mz, ]
+    x[!duplicated(x$mz), ]
+  })
+}
+
+extract_inter_blocks <- function(data, areas) {
+  inter_blocks <- list()
+  inter_blocks[[1]] <- data[1:7, ]
+  counter <- 2
+  for (i in seq_along(areas)[-length(areas)]) {
+    start <- areas[[i]][2]
+    end <- areas[[i + 1]][1] + 5
+    if (start <= end) {
+      inter_blocks[[counter]] <- data[start:end, ][1:7, ]
+      counter <- counter + 1
+    }
+  }
+  return(inter_blocks)
+}
+
 env <- new.env()
 env$mz <- df$mz
 env$i <- env$i
-env$data <- d_raw
+env$data <- d_uint16
 detect_areas(env, 100, 1500)
+inter_blocks <- extract_inter_blocks(df, env$areas)
 cycles <- lapply(env$areas, function(x) df[x[1]:x[2], ])
+cycles <- correct_cycles(cycles, 100, 1500)
+
 tic <- sapply(cycles, function(x) {
   sum(x$i)
 })
@@ -165,33 +162,83 @@ points(
   cex = 0.5,
   col = "darkred"
 )
-
-mz_plot <- function(input, idx, min_mz, max_mz) {
-  df <- input[[idx]]
-  df <- df[df$mz > min_mz, ]
-  df <- df[df$mz < max_mz, ]
-  df <- df[-c(1:6), ]
-  max_idx <- which.max(df$i)
-  df[max_idx, "i"] <- df[max_idx, "i"] * 2
-  df$i <- normalise(df$i)
-  plot(
-    df$mz,
-    df$i,
-    type = "l",
-    xlim = c(min_mz, max_mz),
-  )
-  indices <- which(df$i > 22)
-  temp <- df[indices, ]
-  text(
-    temp$mz, temp$i, temp$mz
-  )
-  print(df[indices, ])
+indices <- seq(1, length(tic), 10)
+text(
+  time[indices],
+  tic[indices],
+  labels = indices,
+  pos = 3,
+  col = "darkblue",
+  cex = 0.7
+)
+for (i in indices) {
+  abline(v = time[i], col = "gray", lty = 2)
 }
-mz_plot(cycles, 135, 100, 1500)
-# 357.2 24.0%
-# 335.2 35.9%
-# 225.2 30.9%
-# 185.1 100.0%
-# 163.0 22.3%
-# 107.1 23.7%
-tic_dev |> head(150)
+
+tic_dev$tic_calc <- tic
+tic_dev$diff <- tic_dev$tic - tic_dev$tic_calc
+tic_dev$mz_inner_block <- sapply(inter_blocks, function(x) {
+  x[7, ]
+})[1, ] |>
+  unlist()
+tic_dev$i_inner_block <- sapply(inter_blocks, function(x) {
+  x[3, ]
+})[2, ] |>
+  unlist()
+tic_dev[1:20, ]
+
+plot(tic_dev[1:10, "diff"], tic_dev[1:10, "i_inner_block"])
+
+# TODO: Scaling
+# The tic of the vendor software
+# is always higher. Often it has values
+# above the range of uint16
+
+env$areas[1:8]
+df[2670:2700, ]
+# TIC cycle 1.57 minutes => 6
+# This fits with the mass table
+# Only checked roughly.
+# But the ION 406.6 is different
+# Here: 121608 is measured for 406.6 m/z
+# I found 31585
+# uint16 0-65535
+# Unlikely other format as mz (e.g. 406.6), intensity, new cycle
+# Still can be checked best use the first block before the first cycle
+121608 / 31585 # 3.850182
+
+# Hex d67
+env$areas[1:8]
+# TIC cycle 1.589 minutes => 7
+df[3110:3130, ]
+# Vendor: 406.6, 177024.0
+# calc: 406.6, 35534
+177024 / 35534 # 4.98182
+
+df[1:20, ]
+# 357.3; 28008 in mass table at 1.479
+# calc: 19885 (4dad)
+28008 / 19885 # 1.408499
+
+# Dynamic scaling factor
+# which is also in the block.
+# Alternative: Other data format
+
+# Check if block requires other data types
+# ======================================================
+read_raw <- function(file_path) {
+  type <- "raw"
+  con <- file(file_path, "rb")
+  data_start <- 752 # Assuming data starts at 0x02f0 (752 in decimal)
+  num_elements <- 200 # data_size
+  seek(con, where = data_start, origin = "start")
+  data <- readBin(
+    con, type,
+    n = num_elements
+  )
+  close(con)
+  return(data)
+}
+d_raw <- read_raw(file_path)
+d_raw[1:24]
+head(df, 11)
