@@ -175,6 +175,10 @@ for (i in indices) {
   abline(v = time[i], col = "gray", lty = 2)
 }
 
+max_i <- lapply(cycles, function(x) {
+  x[which.max(x$i), ]
+}) |> do.call(what = rbind)
+
 tic_dev$tic_calc <- tic
 tic_dev$diff <- tic_dev$tic - tic_dev$tic_calc
 tic_dev$mz_inner_block <- sapply(inter_blocks, function(x) {
@@ -182,17 +186,25 @@ tic_dev$mz_inner_block <- sapply(inter_blocks, function(x) {
 })[1, ] |>
   unlist()
 tic_dev$i_inner_block <- sapply(inter_blocks, function(x) {
-  x[3, ]
+  x[7, ]
 })[2, ] |>
   unlist()
-tic_dev[1:20, ]
 
-plot(tic_dev[1:10, "diff"], tic_dev[1:10, "i_inner_block"])
+# Can i extract i max true? --> No
+tic_dev$mz_max <- max_i$mz
+tic_dev$i_max <- max_i$i
+tic_dev[1:20, ]
+points(tic_dev$time, tic_dev$i_max * 10, col = "blue", pch = 19)
 
 # TODO: Scaling
+# ======================================================
 # The tic of the vendor software
 # is always higher. Often it has values
 # above the range of uint16
+# Dynamic scaling factor
+# which is also in the block.
+# Alternative: Other data format --> actually no space for it
+
 
 env$areas[1:8]
 df[2670:2700, ]
@@ -206,23 +218,34 @@ df[2670:2700, ]
 # Unlikely other format as mz (e.g. 406.6), intensity, new cycle
 # Still can be checked best use the first block before the first cycle
 121608 / 31585 # 3.850182
+# 121608 = 1db08
+# 31585 = 7b 61
+# 00 05 00 04
+# 00 00 00 06
+# ad bc 03 78
+# 00 01 70 0f
+# 03 70 00 01
+# 00 00 01 b5
+# 1f c4 7b 61
 
 # Hex d67
 env$areas[1:8]
 # TIC cycle 1.589 minutes => 7
 df[3110:3130, ]
-# Vendor: 406.6, 177024.0
+# Vendor: 406.6, 177024.0 (2b380)
 # calc: 406.6, 35534
-177024 / 35534 # 4.98182
+177024 / 35534 # 4.98182 (8a ce)
 
 df[1:20, ]
 # 357.3; 28008 in mass table at 1.479
+# 6d 68 = 28008
 # calc: 19885 (4dad)
 28008 / 19885 # 1.408499
-
-# Dynamic scaling factor
-# which is also in the block.
-# Alternative: Other data format
+# 00 00 04 de
+# 00 01 5a 93
+# 04 d6 00 01
+# 00 00 02 68
+# 1b ea 4d ad
 
 # Check if block requires other data types
 # ======================================================
@@ -230,7 +253,7 @@ read_raw <- function(file_path) {
   type <- "raw"
   con <- file(file_path, "rb")
   data_start <- 752 # Assuming data starts at 0x02f0 (752 in decimal)
-  num_elements <- 200 # data_size
+  num_elements <- file.info(file_path)$size - data_start
   seek(con, where = data_start, origin = "start")
   data <- readBin(
     con, type,
@@ -242,3 +265,59 @@ read_raw <- function(file_path) {
 d_raw <- read_raw(file_path)
 d_raw[1:24]
 head(df, 11)
+d_raw[1:24] |>
+  strtoi(base = 16) |>
+  as.integer()
+
+
+d_raw[1:20000]
+
+
+
+# Testing ideas
+# ======================================================
+library(ggplot2)
+p <- function(df) {
+  df <- df[5:9, ]
+  f1 <- sapply(inter_blocks[5:9], function(x) {
+    x[7, 2]
+  })
+  f1 <- f1 * (mean(df$tic) / mean(f1))
+  df$f1 <- f1
+  ggplot(data = df) +
+    geom_point(aes(x = time, y = tic), col = "darkred") +
+    geom_line(aes(x = time, y = tic), col = "darkred") +
+    geom_point(aes(x = time, y = tic_calc), col = "black") +
+    geom_line(aes(x = time, y = tic_calc), col = "black") +
+    geom_point(aes(x = time, y = f1), col = "darkblue") +
+    geom_line(aes(x = time, y = f1), col = "darkblue")
+}
+p(tic_dev)
+inter_blocks[[1]]
+inter_blocks[5:9]
+d_raw[1:22]
+
+
+
+raw <- 19885
+expected <- 28008
+raw <- 35534
+expected <- 177024
+
+
+loss_fct <- function(params) {
+  val <- params[1] * (raw)^params[2]
+  abs(val - expected)
+}
+res <- optim(c(0, 0), loss_fct)
+res
+res$par[1] * (raw)^res$par[2]
+
+
+loss_fct <- function(params) {
+  val <- params[1] * exp((raw) * params[2])
+  abs(val - expected)
+}
+res <- optim(c(0, 0), loss_fct)
+res
+res$par[1] * exp(raw * res$par[2])
