@@ -4,20 +4,6 @@
 #include <iostream>
 #include <vector>
 
-template <typename T> void endianSwap16(T &x) {
-  x = (((x) >> 8) & 0xFF) | (((x) & 0xFF) << 8);
-}
-
-template <typename T> void endianSwap32(T &x) {
-  x = ((x >> 24) & 0xFF) | ((x << 8) & 0xFF0000) | ((x >> 8) & 0xFF00) |
-      (x << 24);
-}
-
-void endianSwapU32(uint32_t &x) {
-  x = ((x << 24) & 0xFF000000) | ((x << 8) & 0x00FF0000) |
-      ((x >> 8) & 0x0000FF00) | ((x >> 24) & 0x000000FF);
-}
-
 uint16_t endianSwapU16(uint16_t value) {
   return ((value & 0xFF) << 8) | ((value >> 8) & 0xFF);
 }
@@ -41,26 +27,32 @@ std::vector<uint16_t> readUint16(std::string &filepath, int offset,
 }
 
 // [[Rcpp::export]]
-std::vector<uint32_t> read_mz_intensity(std::string &file_path) {
+std::vector<uint16_t> read_mz_intensity(std::string &file_path) {
   std::ifstream file(file_path, std::ios::binary | std::ios::ate);
   if (!file.is_open())
     std::runtime_error("Error opening file");
-  size_t sizeFile = file.tellg();
-  int start_pos = 266;
-  int offset_correction = readUint16(file_path, start_pos, 1)[0];
-  offset_correction = start_pos + offset_correction * 2 - 2;
-  size_t n = (sizeFile - offset_correction) / sizeof(uint16_t);
-  std::vector<uint16_t> data = readUint16(file_path, offset_correction, n);
-  std::vector<uint32_t> mz_intensity;
+  size_t file_size = file.tellg();
+  int data_start = 266;
+  int offset_correction = readUint16(file_path, data_start, 1)[0];
+  int where = data_start + offset_correction * 2 - 2;
+  size_t data_size = file_size - where;
+  size_t n = data_size / 2;
+  std::vector<uint16_t> data = readUint16(file_path, where, n);
+  return data;
+}
+
+// [[Rcpp::export]]
+std::vector<double> convert_mz_intensity(std::vector<uint32_t> &data) {
+  std::vector<double> mz_intensity;
   mz_intensity.resize(data.size());
   for (size_t i = 0; i < data.size(); i++) {
-    if (i % 2 == 0) {                     // intensity
+    if (i % 2 != 0) {                     // intensity
       uint16_t head_bits = data[i] >> 14; // Shift right by 14 bits
       uint16_t tail_bits =
           data[i] & 0x3FFF; // 0x3FFF = 0011111111111111 (14 bits)
       mz_intensity[i] = std::pow(8, head_bits) * tail_bits;
     } else { // mz
-      mz_intensity[i] = static_cast<uint32_t>(data[i]);
+      mz_intensity[i] = static_cast<double>(data[i]) / 20;
     }
   }
   return mz_intensity;
