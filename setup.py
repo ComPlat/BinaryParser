@@ -11,6 +11,12 @@ ext_modules = [
         extra_compile_args=["-std=c++17"],
     ),
     Pybind11Extension(
+        "parser_ms",
+        ["src/parser_ms.cpp"],
+        define_macros=[("VERSION_INFO", __version__)],
+        extra_compile_args=["-std=c++17"],
+    ),
+    Pybind11Extension(
         "parser_xray",
         ["src/parser_xray.cpp"],
         define_macros=[("VERSION_INFO", __version__)],
