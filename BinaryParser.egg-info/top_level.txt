@@ -1,5 +1,7 @@
 BinaryParser
+chemstation
 hplc
 parser_hplc
+parser_ms
 parser_xray
 xray

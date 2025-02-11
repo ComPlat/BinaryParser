@@ -1,3 +1,5 @@
+// TODO: find min mz and max mz in meta data
+// TODO: read meta data
 // NOTE: Reading data of MSD1.MS file from
 // Agilent ChemStation
 #include <cmath>

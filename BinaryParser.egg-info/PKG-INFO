@@ -5,6 +5,7 @@ Summary: Parsing binary files
 Author: Konrad Krämer
 Author-email: konrad.kraemer@kit.edu
 Requires-Python: >=3.7
+License-File: LICENSE
 Requires-Dist: pybind11
 Requires-Dist: pandas
 Requires-Dist: numpy
