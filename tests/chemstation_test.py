@@ -37,30 +37,32 @@ def nearest_filter(mz_obs, mz_true, tol=0.5):
     return np.array(mz_obs_filtered)
 
 
+def compare_spectra_intensities(intensity_obs, intensity_true):
+    for i, j in zip(intensity_obs, intensity_true):
+        assert i == j
+
+
 def compare_spectras(df, spectra_true, time):
-    mz_true = spectra_true.iloc[:, 2]
-    intensity_true = spectra_true.iloc[:, 3]
     spectra_obs = df[df["retention_time"].round(3) == time]
+    mz_true = spectra_true.iloc[:, 2]
     indices = nearest_filter(spectra_obs["mz"], mz_true)
-    filtered_spectra = spectra_obs.iloc[indices]
-    mz_obs = filtered_spectra["mz"]
-    intensity_obs = filtered_spectra["intensity"]
-    assert mz_obs.shape == mz_true.shape, "Mismatch in number of m/z values"
-    compare_series(mz_obs, mz_true)
-    compare_intensities(intensity_obs, intensity_true)
+    spectra_obs = spectra_obs.iloc[indices]
+    spectra_obs = spectra_obs.iloc[:, [0, 1]]
+    spectra_true = spectra_true.iloc[:, [2, 4]]
+    compare_spectra_intensities(
+        spectra_obs["intensity"], spectra_true.iloc[:, 1]
+    )
 
 
 def test_svs1025f1():
     file_path = "./tests/Chemstation/SVS_1025F1.D/MSD1.MS"
     df = bp.read_chemstation_file(file_path)
-
     # Compute TIC
     tic_df = df.groupby("retention_time", as_index=False)["intensity"].sum()
     tic_true = pd.read_csv(
         "./tests/Chemstation/TIC_SVS1025F1.CSV",
         delimiter=",", encoding="utf-16"
     )
-
     # Validate TIC
     assert tic_df.shape == (465, 2)
     compare_series(tic_df.retention_time, tic_true.RT)
@@ -81,7 +83,23 @@ test_svs1025f1()
 def test_scs776roh():
     file_path = "./tests/Chemstation/SVS-776ROH.D/MSD1.MS"
     df = bp.read_chemstation_file(file_path)
+    # Compute TIC
     tic_df = df.groupby("retention_time", as_index=False)["intensity"].sum()
+    tic_true = pd.read_csv(
+        "./tests/Chemstation/TIC_SVS776ROH.CSV",
+        delimiter=",", encoding="utf-16"
+    )
+    # Validate TIC
+    assert tic_df.shape == tic_true.shape
+    compare_series(tic_df.retention_time, tic_true.RT)
+    compare_intensities(tic_df.intensity, tic_true.Intensity)
+    # Validate spectra at different retention times
+    for time, filename in [(2.310, "RT2310_SVS776ROH.CSV"), (6.529, "RT6529_SVS776ROH.CSV")]:
+        spectra_true = pd.read_csv(
+            f"./tests/Chemstation/{filename}",
+            delimiter=",", encoding="utf-16", header=None
+        )
+        compare_spectras(df, spectra_true, time)
 
 
 test_scs776roh()
