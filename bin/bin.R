@@ -1,3 +1,33 @@
+# path <- "./bin/TestDaten/CV_new/EL_2Elec_4p79mg_Et4NBF4inACN_EDLC_Pl2_211024_05_CV_C11/data/table_01.jdx"
+# [10] "##VOLTAGE_START=0.0"
+# [11] "##SCAN_RATE=0.05"
+# [12] "##VOLTAGE_LIMIT_ONE=2.700000047683716"
+# [13] "##VOLTAGE_LIMIT_TWO=0.0"
+# [14] "##RESOLUTION=Auto"
+# [15] "##CYCLES=9"
+# [16] "##DATE=45586"
+# [17] "##TIME=.56551085648"
+# [18] "##VOLTAGE_LIMIT_END=0.0"
+# [19] "##SOFTWARE_VERSION=11.43"
+# [20] "##CONCENTRATION_SALT=1"
+# [21] "##FIRSTX=0.013841687701642513"
+# [22] "##LASTX=-0.0004615047946572304"
+# Voltage
+# [23] "##MINX=-0.0009872515220195055" --> Set in device
+# [24] "##MAXX=2.699223756790161" --> Set in device
+# Current
+# [25] "##MINY=-0.006186341957729539"
+# [26] "##MAXY=0.007231874746488927"
+# [27] "##NPOINTS=27030"
+# [28] "##FIRSTY=3.6861687898635866e-05"
+# [31] "##XYPOINTS=(XY..XY)"
+# [32] "0.013841687701642513, 3.6861687898635866e-05"
+# [33] "0.015812207013368607, 0.0002835869200211467"
+# [34] "0.018651776015758514, 0.0006201966994459773"
+# [35] "0.021376779302954674, 0.0009041020984360451"
+# [36] "0.02406417950987816, 0.001166420330971846"
+# [37] "0.026055805385112762, 0.0013446788548112476"
+# [38] "0.02804425358772278, 0.001510192135544381"
 library(ggplot2)
 library(reshape2)
 Rcpp::sourceCpp("./bin/bin.cpp")
@@ -9,12 +39,26 @@ pr <- function(v, sep) {
   cat(v, sep)
 }
 
+vec_pad <- function(vec, size) {
+  if (length(vec) < size) {
+    stop("Vector is too small")
+  }
+  if (length(vec) / size == 0) {
+    return(vec)
+  } else {
+    times <- length(vec) %/% size
+    return(vec[1:(times * size)])
+  }
+}
+
 bin <- R6::R6Class(
   "bin",
   public = list(
     path = NULL,
     raw = NULL,
     raw_subset = NULL,
+    endian = "big", # NOTE: most devices are constructed for windows
+    signed = FALSE,
     initialize = function(path) {
       self$path <- path
       con <- file(path, "rb")
@@ -25,15 +69,27 @@ bin <- R6::R6Class(
     to_char = function(elem) {
       rawToChar(elem)
     },
-    to_uint8 = function(elem) {
-      rawToChar(elem) |> CastToUint8()
+    to_int8 = function(elem) {
+      res <- NULL
+      if (self$signed) {
+        res <- rawToChar(elem) |> as.integer()
+      } else {
+        res <- rawToChar(elem) |> CastToUint8()
+      }
+      return(res)
     },
-    to_uint16 = function(vec) {
+    to_int16 = function(vec) {
+      op <- NULL
+      if (self$signed) {
+        op <- CastToInt16
+      } else {
+        op <- CastToUint16
+      }
       vec <- as.character(vec)
+      vec <- vec_pad(vec, 2)
       vec <- split(vec, rep(seq_len(length(vec) / 2), each = 2))
       res <- lapply(vec, function(x) {
-        # x <- rev(x)
-        CastToUint16(x)
+        op(x)
       })
       names <- sapply(vec, function(i) {
         paste(i, collapse = "")
@@ -41,10 +97,17 @@ bin <- R6::R6Class(
       names(res) <- names
       res
     },
-    to_uint32 = function(vec) {
+    to_int32 = function(vec) {
+      op <- NULL
+      if (self$signed) {
+        op <- CastToInt32
+      } else {
+        op <- CastToUint32
+      }
       vec <- as.character(vec)
+      vec <- vec_pad(vec, 4)
       vec <- split(vec, rep(seq_len(length(vec) / 4), each = 4))
-      res <- lapply(vec, CastToUint32)
+      res <- lapply(vec, op)
       names <- sapply(vec, function(i) {
         paste(i, collapse = "")
       })
@@ -63,7 +126,7 @@ bin <- R6::R6Class(
     print_uint8 = function(idx) {
       cat(" ")
       for (i in idx:(idx + 7)) {
-        temp <- self$to_uint8(self$raw_subset[i])
+        temp <- self$to_int8(self$raw_subset[i])
         if (temp == "") temp <- "."
         cat(temp, "\t")
       }
@@ -71,7 +134,7 @@ bin <- R6::R6Class(
     },
     print_uint16 = function(idx) {
       cat(" ")
-      temp <- self$to_uint16(self$raw_subset[idx:(idx + 7)])
+      temp <- self$to_int16(self$raw_subset[idx:(idx + 7)])
       for (i in seq_along(temp)) {
         pr(names(temp)[i], "\t")
         cat(temp[[i]], "\t")
@@ -80,7 +143,7 @@ bin <- R6::R6Class(
     },
     print_uint32 = function(idx) {
       cat(" ")
-      temp <- self$to_uint32(self$raw_subset[idx:(idx + 7)])
+      temp <- self$to_int32(self$raw_subset[idx:(idx + 7)])
       for (i in seq_along(temp)) {
         pr(names(temp)[i], "\t\t")
         cat(temp[[i]], "\t")
@@ -106,16 +169,16 @@ bin <- R6::R6Class(
       self$raw_subset <- self$raw[range]
       x <- NULL
       y <- NULL
-      if (type == "uint8") {
-        y <- sapply(self$raw_subset, self$to_uint8)
+      if (type == "int8") {
+        y <- sapply(self$raw_subset, self$to_int8)
         x <- as.character(self$raw_subset)
-      } else if (type == "uint16") {
-        res <- self$to_uint16(self$raw_subset)
+      } else if (type == "int16") {
+        res <- self$to_int16(self$raw_subset)
         x <- names(res)
         y <- unlist(res)
         attributes(y) <- NULL
-      } else if (type == "uint32") {
-        res <- self$to_uint32(self$raw_subset)
+      } else if (type == "int32") {
+        res <- self$to_int32(self$raw_subset)
         x <- names(res)
         y <- unlist(res)
         attributes(y) <- NULL
@@ -139,17 +202,36 @@ bin <- R6::R6Class(
   )
 )
 
-path <- "./tests/Chemstation/SVS_1025F1.D/MSD1.MS"
+path <- "./bin/TestDaten/CV_new/EL_2Elec_4p79mg_Et4NBF4inACN_EDLC_Pl2_211024_05_CV_C11.mpr"
 b <- bin$new(path)
-# b$print(1:320)
+b$print(1:100)
 
-range <- 753:(753 + 4951)
-range <- range[seq(1, length(range), 2)]
-range <- range[seq(2, length(range), 2)]
-b$plot(range, "uint16")
+b$signed <- FALSE
+range <- 7200:8001
+range <- 7247:(7247 + 400 * 4 - 1)
+b$plot(range, "int16")
 
-uint16_values <- b$to_uint16(b$raw_subset) |> unlist()
-bit_matrix <- uint16_to_bit_matrix(uint16_values)
+int_values <- b$to_int16(b$raw) |> unlist()
+summary(int_values)
+length(int_values)
+
+# Determine cycle length
+acf(int_values, lag.max = 10000, main = "Autocorrelation of Data")
+acf_values <- acf(int_values, lag.max = 10000, plot = FALSE)$acf[-1]
+lag_indices <- which(acf_values > 0.5)[1]
+print(lag_indices)
+
+# Plot raw data
+indices <- seq(1, length(int_values), by = 80) # 100
+data_start <- 0x1c40 # From hexdump
+values <- int_values[data_start:(data_start + 10000)]
+plot(values, type = "l", ylim = c(0, 10000))
+abline(v = seq(1, length(values), by = 47), col = "red", lty = 2)
+points(values, pch = 19)
+
+
+# Print bits
+bit_matrix <- uint16_to_bit_matrix(int_values)
 df <- melt(bit_matrix)
 colnames(bit_matrix) <- paste0("B_", 15:0)
 colnames(df) <- c("Idx", "Bit_Pos", "Value")
@@ -160,6 +242,6 @@ ggplot(df, aes(x = Bit_Pos, y = Idx, fill = Value)) +
   scale_x_reverse(breaks = 15:0) +
   labs(
     x = "Bit Position", y = "Number Index",
-    title = "Bit Pattern of uint16 Values"
+    title = "Bit Pattern of int Values"
   ) +
   theme_minimal()
