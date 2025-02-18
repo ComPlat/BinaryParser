@@ -14,6 +14,8 @@ chemstation/__init__.py
 chemstation/read_ms_file.py
 hplc/__init__.py
 hplc/read_files.py
+openlab/__init__.py
+openlab/openlab.py
 src/parser_hplc.cpp
 src/parser_ms.cpp
 src/parser_xray.cpp

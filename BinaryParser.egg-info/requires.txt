@@ -3,6 +3,9 @@ pandas
 numpy
 typeguard
 plotly
+matplotlib
+seaborn
+netCDF4
 
 [test]
 pytest

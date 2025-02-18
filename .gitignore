@@ -1,2 +1,3 @@
 bin/TestDaten
-
+.development
+tests/__pycache__
