@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
-import BinaryParser as bp
-import pandas as pd
+import binary_parser as bp
 
 file_path = "./tests/Chemstation/SVS_1025F1.D/MSD1.MS"
 df = bp.read_chemstation_file(file_path)

@@ -1,87 +1,23 @@
-name: CI
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+name: Pytest
 
-permissions:
-  contents: write   # needed for gh release upload
+on: [push]
 
 jobs:
   build:
-    name: Build and Test Package
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.14"]
-        os: [ubuntu-latest]
-
+        python-version: ["3.13", "3.14"]
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v5
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Cache Python Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install Build Tools
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip build
-          python -m pip install pybind11
-
-      - name: Lint Code
-        uses: wearerequired/lint-action@v2.3.0
-        with:
-          linters: |
-            pylint
-
-      - name: Build Wheel
+          pip install --upgrade pip
+          pip install .[dev]
+      - name: Test the code with pytest
         run: |
-          python -m build --wheel
-          ls -al dist
-
-      - name: Upload Built Wheels (artifact)
-        uses: actions/upload-artifact@v4
-        with:
-          name: binaryparser-wheels
-          path: dist/*.whl
-          if-no-files-found: error
-
-      - name: Ensure release exists
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release view v1.2.0 >/dev/null 2>&1 || gh release create v1.2.0 -t "v1.2.0" -n ""
-
-      - name: Upload Release Asset(s)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ls -al dist
-          gh release upload v1.2.0 dist/*cp314*.whl --clobber
-
-      - name: Install Built Package
-        run: pip install dist/*.whl
-
-      - name: Run Tests
-        # Remove PYTHONPATH so tests import the installed wheel, not files from the repo root
-        run: |
-          python -m pip install pytest
-          pytest tests/
-
-      - name: Show Python Environment (Debug)
-        if: failure()
-        run: |
-          python --version
-          pip list
-          ls -R
+          pytest .

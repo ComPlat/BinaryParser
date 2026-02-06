@@ -1,4 +1,4 @@
-import BinaryParser as bp
+import binary_parser as bp
 import pandas as pd
 import numpy as np
 
@@ -57,7 +57,6 @@ def compare_spectras(df, spectra_true, time):
 def test_svs1025f1():
     file_path = "./tests/Chemstation/SVS_1025F1.D/MSD1.MS"
     df = bp.read_chemstation_file(file_path)
-    # Compute TIC
     tic_df = df.groupby("retention_time", as_index=False)["intensity"].sum()
     tic_true = pd.read_csv(
         "./tests/Chemstation/TIC_SVS1025F1.CSV",
@@ -76,8 +75,6 @@ def test_svs1025f1():
         )
         compare_spectras(df, spectra_true, time)
 
-
-test_svs1025f1()
 
 
 def test_scs776roh():
@@ -100,6 +97,3 @@ def test_scs776roh():
             delimiter=",", encoding="utf-16", header=None
         )
         compare_spectras(df, spectra_true, time)
-
-
-test_scs776roh()

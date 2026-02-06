@@ -1,8 +1,0 @@
-BinaryParser
-chemstation
-hplc
-openlab
-parser_hplc
-parser_ms
-parser_xray
-xray
