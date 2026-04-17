@@ -1,0 +1,20 @@
+ 443 41e0 5888cb80  1ff
+Method       Method started:  line# 1 vial# 11 inj# 1       08:00:00 01/25/17
+  67 41e0 5888cb81    0
+Method       Instrument running sample Vial 11              08:00:01 01/25/17
+   0 1da9 5888cc0c  600
+1100 THM   1 Column temperature = 20.0 °C                   08:02:20 01/25/17
+   0 1da7 5888cc0c  600
+1100 PMP   1 Pressure = 199.6 bar                           08:02:20 01/25/17
+   0 1da8 5888cc0c  600
+1100 ALS   1 Air temperature (tray) = 20.0 °C               08:02:20 01/25/17
+   0 1da7 5888d170  600
+1100 PMP   1 Pressure = 200.6 bar                           08:25:20 01/25/17
+   0 1da9 5888d170  600
+1100 THM   1 Column temperature = 20.0 °C                   08:25:20 01/25/17
+  70 41de 5888d177    0
+CP Macro     Analyzing rawdata SVS476F1.D                   08:25:27 01/25/17
+  67 41e0 5888d177    0
+Method       Instrument run completed                       08:25:27 01/25/17
+  67 41e0 5888d17d    0
+Method       Method completed                               08:25:33 01/25/17

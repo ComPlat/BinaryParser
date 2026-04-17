@@ -1,0 +1,54 @@
+This data was acquired in Method&Run Control.
+The MSD parameters were saved in the msdiag register file.
+This msparms.txt file was built using the values from the msdiag register.
+Some parameters normally reported under MSData acquisition in Tune 
+may be missing from this msparms.txt file.  You may be able to read these 
+values from Data Analysis.  These items are marked with an asterisk (*).
+ 
+ 
+ 
+File                     :   D:\HPCHEM\1\DATA\SVS476F1.D
+Operator                 :   ComPlat
+Date acquired            :   Wed Jan 25 08:25:27 2017
+Instrument               :   Instrument 1
+Tune File                :   D:\HPCHEM\1\1946TUNE\atunes.tun
+ 
+ 
+Sample information
+----------------------------------
+Sample name              :   SVS-476F1
+Misc info                :    
+ 
+ 
+MS parameters - Positive
+----------------------------------
+Skim1                    :    Not Applicable
+Skim2                    :    11.0 V    
+Ion Energy               :    5.0 V     
+Lens1                    :    1.8 V     
+Lens2                    :    29 V      
+Iris                     :    400 V     
+HED                      :    10000 V   
+Width Gain               :    997       
+Width Offset             :    Variable  
+                              Mass         :   Value    
+                                 --------------------------
+                              118.08       :   -132     
+                              622.03       :   -163     
+                              922.01       :   -178     
+                              1521.97      :   -207     
+                              2121.93      :   -243     
+                                 --------------------------
+Mass Gain                :    71.80     
+Mass Offset              :    0.612     
+Quad DC                  :    0.00 V    
+Octopole Peak            :    300 V     
+Octopole Knee            :    312 Da    
+Lens2DC                  :    Not Applicable
+L2RFEn                   :    Not Applicable
+L2RFPh                   :    Not Applicable
+L2RFAmp                  :    Not Applicable
+Mass Filter              :    Gaussian  
+Mass Filter Width        :    0.30 Da   
+Time Filter              :    Gaussian  
+Time Filter Width        :    0.050 minutes
