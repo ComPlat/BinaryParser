@@ -21,6 +21,6 @@ def test_read_ls():
 def test_read_ms():
     ms = bp.read_ms(path)
     assert type(ms) == list
-    assert ms[0].shape == (1358778, 3)
-    assert ms[1].shape == (1324471, 3)
+    assert ms[1].shape == (1358778, 3)
+    assert ms[0].shape == (1324471, 3)
 
