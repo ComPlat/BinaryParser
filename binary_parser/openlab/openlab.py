@@ -22,7 +22,7 @@ def get_files(path: str) -> List[str]:
         base = name.replace("_spectra", "")
         parts = re.split(r"(\d+)", base)
         parts = [int(x) if x.isdigit() else x.lower() for x in parts]
-        return (parts, is_spectra)
+        return parts, is_spectra
 
     return sorted(fs, key=natkey)
 
@@ -33,8 +33,6 @@ def _get_attr(path: str):
     with nc.Dataset(path, "r") as dataset:
         attr = {key: dataset.getncattr(key) for key in dataset.ncattrs()}
     return attr
-
-
 
 def read_attr(path: str) -> pd.DataFrame:
     """
@@ -144,7 +142,13 @@ def _normalise(data_list: List[pd.DataFrame]) -> List[pd.DataFrame]:
 
 def read_ms(path: str) -> List[pd.DataFrame]:
     fs = get_files(path)
-    fs_ms = [f for f in fs if "spectra" in os.path.basename(f)]
+
+    uns_fs_ms = [f for f in fs if "spectra" in os.path.basename(f)]
+    def sort_plus_minus(fm):
+        base = os.path.basename(fm)
+        return sum(1 if x == "+" else -1 for x in base if x in ["-", "+"])
+
+    fs_ms = sorted(uns_fs_ms, key=sort_plus_minus)
     data_minus = _get_ms_data(fs_ms[0])
     point_counts_minus = _get_point_counts(fs_ms[0])
     time_minus = _get_scan_time(fs_ms[0])
