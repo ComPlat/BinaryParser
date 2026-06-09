@@ -1,10 +1,11 @@
 import os
 import re
-from typing import List
+from typing import List, Tuple
 
 import netCDF4 as nc
 import numpy as np
 import pandas as pd
+import plotly.express as px
 
 
 
@@ -132,11 +133,18 @@ def _split_data(
 
 
 
-def _normalise(data_list: List[pd.DataFrame]) -> List[pd.DataFrame]:
-    return [
-        df.assign(intensities=df["intensities"] * (100 / df["intensities"].max()))
-        for df in data_list
+def _normalise(data_list_minus: List[pd.DataFrame], data_list_plus: List[pd.DataFrame]) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
+    max_i = max(x['intensities'].max() for x in data_list_minus + data_list_plus)
+    res_minus = [
+        df.assign(intensities=df["intensities"] * (100 / max_i))
+        for df in data_list_minus
     ]
+    res_plus = [
+        df.assign(intensities=df["intensities"] * (100 / max_i))
+        for df in data_list_plus
+    ]
+
+    return res_minus, res_plus
 
 
 
@@ -152,13 +160,54 @@ def read_ms(path: str) -> List[pd.DataFrame]:
     data_minus = _get_ms_data(fs_ms[0])
     point_counts_minus = _get_point_counts(fs_ms[0])
     time_minus = _get_scan_time(fs_ms[0])
-    df_minus = _normalise(_split_data(data_minus, point_counts_minus))
 
     data_plus = _get_ms_data(fs_ms[1])
     point_counts_plus = _get_point_counts(fs_ms[1])
     time_plus = _get_scan_time(fs_ms[1])
-    df_plus = _normalise(_split_data(data_plus, point_counts_plus))
+
+    df_minus = _split_data(data_minus, point_counts_minus)
+    df_plus = _split_data(data_plus, point_counts_plus)
 
     df_minus = pd.concat([df.assign(time=t) for df, t in zip(df_minus, time_minus)])
     df_plus = pd.concat([df.assign(time=t) for df, t in zip(df_plus, time_plus)])
     return [df_minus, df_plus]
+
+
+
+def _summarise_ms_trace(df: pd.DataFrame, polarity: str) -> pd.DataFrame:
+    required_columns = {"time", "intensities"}
+    if not required_columns.issubset(df.columns):
+        raise ValueError(f"MS dataframe must contain columns: {required_columns}")
+
+    trace = df.groupby("time", as_index=False)["intensities"].sum()
+    trace["polarity"] = polarity
+    return trace
+
+
+
+def plot_ms(path: str, show: bool = True):
+    """Plot OpenLab MS minus and plus traces in one graph."""
+    df_minus, df_plus = read_ms(path)
+    data = pd.concat(
+        [
+            _summarise_ms_trace(df_minus, "minus"),
+            _summarise_ms_trace(df_plus, "plus"),
+        ],
+        ignore_index=True,
+    )
+
+    fig = px.line(
+        data,
+        x="time",
+        y="intensities",
+        color="polarity",
+        labels={
+            "time": "Retention time / min",
+            "intensities": "Summed normalized intensity",
+            "polarity": "Polarity",
+        },
+        title="OpenLab MS plus/minus traces",
+    )
+    if show:
+        fig.show()
+    return fig
