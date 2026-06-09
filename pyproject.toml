@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "BinaryParser"
-version = "0.1.1"
+version = "0.1.4"
 authors = [{ name = "Konrad Krämer", email = "konrad.kraemer@kit.edu" }, { name = "Martin Starman", email = "martin.starman@kit.edu" }, { name = "Nicole Jung", email = "nicole.jung@kit.edu" }]
 requires-python = ">= 3.12"
 description = "Parsing binary files"
